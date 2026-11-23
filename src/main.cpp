@@ -9,158 +9,172 @@
 using namespace geode::prelude;
 
 namespace {
-bool s_openedFromPause = false;
-bool s_pauseFreezeActive = false;
+bool garageOpenedFromPause = false;
+bool gameplayFrozen = false;
 
-void applyCurrentLoadout(PlayerObject* player) {
+void applyPlayerAppearance(PlayerObject* player) {
     if (!player) return;
 
-    auto gm = GameManager::sharedState();
+    auto gameManager = GameManager::sharedState();
+    IconType iconType = IconType::Cube;
 
-    // The garage changes GameManager::m_playerIconType when the user switches
-    // garage tabs. That is NOT the mode the live player is currently using.
-    // Read the actual mode from this PlayerObject so changing the Ball icon
-    // in the garage cannot turn a Cube in the level into a Ball.
-    IconType type = IconType::Cube;
     if (player->m_isShip) {
-        type = IconType::Ship;
+        iconType = IconType::Ship;
     } else if (player->m_isBall) {
-        type = IconType::Ball;
+        iconType = IconType::Ball;
     } else if (player->m_isBird) {
-        type = IconType::Ufo;
+        iconType = IconType::Ufo;
     } else if (player->m_isDart) {
-        type = IconType::Wave;
+        iconType = IconType::Wave;
     } else if (player->m_isRobot) {
-        type = IconType::Robot;
+        iconType = IconType::Robot;
     } else if (player->m_isSpider) {
-        type = IconType::Spider;
+        iconType = IconType::Spider;
     } else if (player->m_isSwing) {
-        type = IconType::Swing;
+        iconType = IconType::Swing;
     }
 
-    auto icon = gm->activeIconForType(type);
+    auto iconID = gameManager->activeIconForType(iconType);
 
-    switch (type) {
-        case IconType::Cube:   player->updatePlayerFrame(icon); break;
-        case IconType::Ship:   player->updatePlayerShipFrame(icon); break;
-        case IconType::Ball:   player->updatePlayerRollFrame(icon); break;
-        case IconType::Ufo:    player->updatePlayerBirdFrame(icon); break;
-        case IconType::Wave:   player->updatePlayerDartFrame(icon); break;
-        case IconType::Robot:  player->updatePlayerRobotFrame(icon); break;
-        case IconType::Spider: player->updatePlayerSpiderFrame(icon); break;
-        case IconType::Swing:  player->updatePlayerSwingFrame(icon); break;
-        default:               player->updatePlayerFrame(icon); break;
+    switch (iconType) {
+        case IconType::Cube:
+            player->updatePlayerFrame(iconID);
+            break;
+        case IconType::Ship:
+            player->updatePlayerShipFrame(iconID);
+            break;
+        case IconType::Ball:
+            player->updatePlayerRollFrame(iconID);
+            break;
+        case IconType::Ufo:
+            player->updatePlayerBirdFrame(iconID);
+            break;
+        case IconType::Wave:
+            player->updatePlayerDartFrame(iconID);
+            break;
+        case IconType::Robot:
+            player->updatePlayerRobotFrame(iconID);
+            break;
+        case IconType::Spider:
+            player->updatePlayerSpiderFrame(iconID);
+            break;
+        case IconType::Swing:
+            player->updatePlayerSwingFrame(iconID);
+            break;
+        default:
+            player->updatePlayerFrame(iconID);
+            break;
     }
 
-    player->setColor(gm->colorForIdx(gm->getPlayerColor()));
-    player->setSecondColor(gm->colorForIdx(gm->getPlayerColor2()));
+    player->setColor(gameManager->colorForIdx(gameManager->getPlayerColor()));
+    player->setSecondColor(gameManager->colorForIdx(gameManager->getPlayerColor2()));
     player->updatePlayerGlow();
     player->updateGlowColor();
 }
 
-void returnToPause() {
-    if (!s_openedFromPause) return;
+void returnToPauseMenu() {
+    if (!garageOpenedFromPause) return;
 
-    s_openedFromPause = false;
+    garageOpenedFromPause = false;
     CCDirector::get()->popScene();
 
-    // Apply the garage's saved selection to both live players without resuming gameplay.
     if (auto playLayer = PlayLayer::get()) {
-        applyCurrentLoadout(playLayer->m_player1);
-        applyCurrentLoadout(playLayer->m_player2);
+        applyPlayerAppearance(playLayer->m_player1);
+        applyPlayerAppearance(playLayer->m_player2);
     }
 }
 }
 
-class $modify(DynamicPauseLayer, PauseLayer) {
+class $modify(PauseLayerHook, PauseLayer) {
     void customSetup() {
         PauseLayer::customSetup();
 
-        auto sprite = CCSprite::createWithSpriteFrameName("GJ_garageBtn_001.png");
-        if (!sprite) return;
-        sprite->setScale(0.8f);
+        auto garageSprite = CCSprite::createWithSpriteFrameName("GJ_garageBtn_001.png");
+        if (!garageSprite) return;
 
-        auto button = CCMenuItemSpriteExtra::create(
-            sprite,
+        garageSprite->setScale(0.8f);
+
+        auto garageButton = CCMenuItemSpriteExtra::create(
+            garageSprite,
             this,
-            menu_selector(DynamicPauseLayer::openOfficialGarage)
+            menu_selector(PauseLayerHook::openGarage)
         );
-        button->setID("dynamic-icon-garage-button");
+        garageButton->setID("dynamic-icon-garage-button");
 
-        auto menu = CCMenu::create();
-        menu->addChild(button);
-        menu->setPosition({36.f, 36.f});
-        menu->setID("dynamic-icon-garage-menu");
-        addChild(menu, 100);
+        auto garageMenu = CCMenu::create();
+        garageMenu->addChild(garageButton);
+        garageMenu->setPosition({36.f, 36.f});
+        garageMenu->setID("dynamic-icon-garage-menu");
+        addChild(garageMenu, 100);
     }
 
-    void openOfficialGarage(CCObject*) {
-        s_openedFromPause = true;
-        s_pauseFreezeActive = true;
+    void openGarage(CCObject*) {
+        garageOpenedFromPause = true;
+        gameplayFrozen = true;
 
-        auto scene = GJGarageLayer::scene();
-        CCDirector::get()->pushScene(CCTransitionFade::create(0.25f, scene));
+        auto garageScene = GJGarageLayer::scene();
+        CCDirector::get()->pushScene(CCTransitionFade::create(0.25f, garageScene));
     }
 
     void onResume(CCObject* sender) {
-        s_pauseFreezeActive = false;
+        gameplayFrozen = false;
         PauseLayer::onResume(sender);
     }
 };
 
-class $modify(DynamicGarageLayer, GJGarageLayer) {
+class $modify(GarageLayerHook, GJGarageLayer) {
     void onBack(CCObject* sender) {
-        if (s_openedFromPause) {
-            returnToPause();
+        if (garageOpenedFromPause) {
+            returnToPauseMenu();
             return;
         }
+
         GJGarageLayer::onBack(sender);
     }
 
     void keyBackClicked() {
-        if (s_openedFromPause) {
-            returnToPause();
+        if (garageOpenedFromPause) {
+            returnToPauseMenu();
             return;
         }
+
         GJGarageLayer::keyBackClicked();
     }
 };
 
-// Freeze the actual gameplay update loop while the official garage is open.
-class $modify(DynamicBaseGameLayer, GJBaseGameLayer) {
+class $modify(BaseGameLayerHook, GJBaseGameLayer) {
     void update(float dt) {
-        if (s_pauseFreezeActive && PlayLayer::get()) return;
+        if (gameplayFrozen && PlayLayer::get()) return;
         GJBaseGameLayer::update(dt);
     }
 };
 
-class $modify(DynamicUnlockGameManager, GameManager) {
-    bool isIconUnlocked(int iconID, IconType type) {
+class $modify(GameManagerHook, GameManager) {
+    bool isIconUnlocked(int iconID, IconType iconType) {
         return true;
     }
 
-    bool isColorUnlocked(int colorID, UnlockType type) {
+    bool isColorUnlocked(int colorID, UnlockType unlockType) {
         return true;
     }
 };
 
-class $modify(DynamicUnlockStatsManager, GameStatsManager) {
-    bool isItemUnlocked(UnlockType type, int itemID) {
-        // Practice Music Sync is GJItem 17 in Geometry Dash.
-        if (type == UnlockType::GJItem && itemID == 17) return true;
-        return GameStatsManager::isItemUnlocked(type, itemID);
+class $modify(GameStatsManagerHook, GameStatsManager) {
+    bool isItemUnlocked(UnlockType unlockType, int itemID) {
+        if (unlockType == UnlockType::GJItem && itemID == 17) return true;
+        return GameStatsManager::isItemUnlocked(unlockType, itemID);
     }
 };
 
-class $modify(DynamicPlayLayer, PlayLayer) {
+class $modify(PlayLayerHook, PlayLayer) {
     void resetLevel() {
-        s_pauseFreezeActive = false;
+        gameplayFrozen = false;
         PlayLayer::resetLevel();
     }
 
     void onQuit() {
-        s_pauseFreezeActive = false;
-        s_openedFromPause = false;
+        gameplayFrozen = false;
+        garageOpenedFromPause = false;
         PlayLayer::onQuit();
     }
 };
