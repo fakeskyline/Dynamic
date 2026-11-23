@@ -1,0 +1,11 @@
+{
+  "geode": "6.0.0-beta.1",
+  "gd": "2.2091",
+  "id": "fakeskyline.dynamic",
+  "name": "Dynamic Icon",
+  "version": "1.0.0",
+  "developer": "fakeskyline",
+  "description": "An in-level icon editor accessible from the pause menu.",
+  "tags": ["interface", "customization", "utility"],
+  "platforms": ["android64"]
+}
