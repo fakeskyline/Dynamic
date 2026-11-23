@@ -43,6 +43,9 @@ jobs:
       - name: Combine Geode packages
         id: combine
         uses: geode-sdk/build-geode-mod/combine@main
+        with:
+          zstd: false
+          optimize-pngs: false
 
       - name: Validate universal package
         shell: bash
