@@ -6,7 +6,7 @@
   },
   "id": "fakeskyline.dynamic",
   "name": "Dynamic Icon",
-  "version": "v1.0.0",
+  "version": "1.1.0",
   "developer": "fakeskyline",
   "description": "An in-level icon editor accessible from the pause menu.",
   "tags": ["interface", "customization", "utility"]

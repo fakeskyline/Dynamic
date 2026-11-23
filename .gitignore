@@ -1,8 +1,0 @@
-build/
-build-*/
-*.geode
-*.so
-*.pdb
-*.dbg
-.idea/
-.vscode/

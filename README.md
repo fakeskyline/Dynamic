@@ -29,28 +29,33 @@ When returning from the garage, the mod reads the active mode from the live `Pla
 
 ## Compatibility
 
-| Platform | Architecture | Geode target |
-| --- | --- | --- |
-| Android32 | armeabi-v7a | `Android32` |
-| Android64 | arm64-v8a | `Android64` |
-| Windows | x86_64 | `Win64` |
+| Platform | Architecture | Geode target | Binary |
+| --- | --- | --- | --- |
+| Android32 | ARMv7 | `armeabi-v7a` / `Android32` | `fakeskyline.dynamic.android32.so` |
+| Android64 | ARM64 | `arm64-v8a` / `Android64` | `fakeskyline.dynamic.android64.so` |
+| Windows | x86_64 | `Win64` | `fakeskyline.dynamic.dll` |
 
-The project uses Geode APIs and Cocos2d interfaces shared by these targets. There are no Android-only or Windows-only calls in the gameplay code; the same source is compiled separately for each platform.
+Each platform is compiled independently with its own Geode target and toolchain. The gameplay source is shared because it uses cross-platform Geode APIs; platform-specific source is only needed if platform-specific functionality is introduced.
 
 - Geometry Dash: 2.2091
 - Geode SDK: v6.0.0-beta.2
 
-## Build with GitHub Actions
+## GitHub Actions builds
 
-The workflow is in `.github/workflows/build.yml`. It runs on pushes to `main` and can also be started manually from the repository's **Actions** tab.
+The workflow at `.github/workflows/build.yml` builds Android32, Android64 and Win64 in separate matrix jobs. Each build uses `geode-sdk/build-geode-mod@main` with `combine: true`.
 
-Three platform builds run in parallel: Android32 and Android64 on Ubuntu, and Windows on a Windows runner. After all three succeed, a packaging job collects their `.geode` files into one artifact:
+After all three builds succeed, the official `geode-sdk/build-geode-mod/combine@main` action merges the platform binaries into one universal `.geode` package.
 
-`Dynamic-Icon-All-Platforms`
+The workflow then validates the package before uploading it:
 
-To get all builds, open a completed workflow run, go to **Artifacts**, and download that single ZIP. It contains the packages for Android32, Android64 and Windows. The temporary per-platform artifacts are retained for one day; the combined artifact is retained for 30 days.
+- Checks that all three platform binaries are present.
+- Checks Android32 is ELF32 / ARM.
+- Checks Android64 is ELF64 / AArch64.
+- Checks Windows is PE32+ / x86-64.
 
-The workflow uses `geode-sdk/build-geode-mod@main`, the SDK version from `mod.json`, and the `Release` configuration. If any platform build fails, the combined package job will not run.
+If a binary is missing or has the wrong architecture, validation fails and the universal artifact is not published. The artifact is named `Dynamic-Icon-All-Platforms` and is retained for 30 days.
+
+Pushes to `main` start the workflow automatically. It can also be started manually from the repository's **Actions** tab.
 
 ## Local build
 
