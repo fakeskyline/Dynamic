@@ -6,20 +6,19 @@ using namespace geode::prelude;
 
 namespace {
 bool s_openedFromPause = false;
+PlayLayer* s_frozenPlayLayer = nullptr;
 
 void returnToPause() {
     if (!s_openedFromPause) return;
 
     s_openedFromPause = false;
 
-    // Remove only the extra pause lock acquired when entering the garage.
-    if (auto playLayer = PlayLayer::get()) {
-        if (playLayer->m_gameState.m_pauseCounter > 0) {
-            playLayer->m_gameState.m_pauseCounter--;
-        }
-    }
-
     CCDirector::get()->popScene();
+
+    if (s_frozenPlayLayer) {
+        s_frozenPlayLayer->resumeSchedulerAndActions();
+        s_frozenPlayLayer = nullptr;
+    }
 
     if (auto playLayer = PlayLayer::get()) {
         auto gm = GameManager::sharedState();
@@ -58,10 +57,10 @@ class $modify(DynamicPauseLayer, PauseLayer) {
     }
 
     void openOfficialGarage(CCObject*) {
-        // Keep the active level explicitly paused while the garage scene is open.
+        // Freeze the complete gameplay node tree while the official garage is open.
         if (auto playLayer = PlayLayer::get()) {
-            playLayer->pauseGame(false);
-            playLayer->m_gameState.m_pauseCounter++;
+            s_frozenPlayLayer = playLayer;
+            s_frozenPlayLayer->pauseSchedulerAndActions();
         }
 
         s_openedFromPause = true;
