@@ -16,7 +16,28 @@ void applyCurrentLoadout(PlayerObject* player) {
     if (!player) return;
 
     auto gm = GameManager::sharedState();
-    auto type = gm->m_playerIconType;
+
+    // The garage changes GameManager::m_playerIconType when the user switches
+    // garage tabs. That is NOT the mode the live player is currently using.
+    // Read the actual mode from this PlayerObject so changing the Ball icon
+    // in the garage cannot turn a Cube in the level into a Ball.
+    IconType type = IconType::Cube;
+    if (player->m_isShip) {
+        type = IconType::Ship;
+    } else if (player->m_isBall) {
+        type = IconType::Ball;
+    } else if (player->m_isBird) {
+        type = IconType::Ufo;
+    } else if (player->m_isDart) {
+        type = IconType::Wave;
+    } else if (player->m_isRobot) {
+        type = IconType::Robot;
+    } else if (player->m_isSpider) {
+        type = IconType::Spider;
+    } else if (player->m_isSwing) {
+        type = IconType::Swing;
+    }
+
     auto icon = gm->activeIconForType(type);
 
     switch (type) {
