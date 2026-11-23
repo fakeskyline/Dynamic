@@ -12,24 +12,41 @@ namespace {
 bool s_openedFromPause = false;
 bool s_pauseFreezeActive = false;
 
+void applyCurrentLoadout(PlayerObject* player) {
+    if (!player) return;
+
+    auto gm = GameManager::sharedState();
+    auto type = gm->m_playerIconType;
+    auto icon = gm->activeIconForType(type);
+
+    switch (type) {
+        case IconType::Cube:   player->updatePlayerFrame(icon); break;
+        case IconType::Ship:   player->updatePlayerShipFrame(icon); break;
+        case IconType::Ball:   player->updatePlayerRollFrame(icon); break;
+        case IconType::Ufo:    player->updatePlayerBirdFrame(icon); break;
+        case IconType::Wave:   player->updatePlayerDartFrame(icon); break;
+        case IconType::Robot:  player->updatePlayerRobotFrame(icon); break;
+        case IconType::Spider: player->updatePlayerSpiderFrame(icon); break;
+        case IconType::Swing:  player->updatePlayerSwingFrame(icon); break;
+        default:               player->updatePlayerFrame(icon); break;
+    }
+
+    player->setColor(gm->colorForIdx(gm->getPlayerColor()));
+    player->setSecondColor(gm->colorForIdx(gm->getPlayerColor2()));
+    player->updatePlayerGlow();
+    player->updateGlowColor();
+}
+
 void returnToPause() {
     if (!s_openedFromPause) return;
 
     s_openedFromPause = false;
     CCDirector::get()->popScene();
 
-    // Keep the level frozen. The pause layer remains underneath the garage scene.
-    // Gameplay is unfrozen only when the player explicitly presses Resume.
+    // Apply the garage's saved selection to both live players without resuming gameplay.
     if (auto playLayer = PlayLayer::get()) {
-        auto gm = GameManager::sharedState();
-        auto icon = gm->activeIconForType(gm->m_playerIconType);
-
-        if (playLayer->m_player1) {
-            playLayer->m_player1->updatePlayerFrame(icon);
-        }
-        if (playLayer->m_player2) {
-            playLayer->m_player2->updatePlayerFrame(icon);
-        }
+        applyCurrentLoadout(playLayer->m_player1);
+        applyCurrentLoadout(playLayer->m_player2);
     }
 }
 }
@@ -88,8 +105,7 @@ class $modify(DynamicGarageLayer, GJGarageLayer) {
     }
 };
 
-// Freeze the actual gameplay update loop. Pausing CCNode actions alone does not
-// reliably stop GJBaseGameLayer physics while another scene is pushed.
+// Freeze the actual gameplay update loop while the official garage is open.
 class $modify(DynamicBaseGameLayer, GJBaseGameLayer) {
     void update(float dt) {
         if (s_pauseFreezeActive && PlayLayer::get()) return;
