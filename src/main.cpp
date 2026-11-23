@@ -50,6 +50,11 @@ class $modify(DynamicPauseLayer, PauseLayer) {
     }
 
     void openOfficialGarage(CCObject*) {
+        // Keep the active level explicitly paused while the garage scene is open.
+        if (auto playLayer = PlayLayer::get()) {
+            playLayer->pauseGame(false);
+        }
+
         s_openedFromPause = true;
         auto scene = GJGarageLayer::scene();
         CCDirector::get()->pushScene(CCTransitionFade::create(0.25f, scene));
