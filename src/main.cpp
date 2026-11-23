@@ -30,15 +30,15 @@ int limitOf(Mode m) {
 int selected(Mode m) {
     auto g = GameManager::sharedState();
     switch (m) {
-        case Mode::Cube: return g->m_playerFrame;
-        case Mode::Ship: return g->m_playerShip;
-        case Mode::Ball: return g->m_playerBall;
-        case Mode::Ufo: return g->m_playerBird;
-        case Mode::Wave: return g->m_playerDart;
-        case Mode::Robot: return g->m_playerRobot;
-        case Mode::Spider: return g->m_playerSpider;
-        case Mode::Swing: return g->m_playerSwing;
-        case Mode::Jetpack: return g->m_playerJetpack;
+        case Mode::Cube: return g->getPlayerFrame();
+        case Mode::Ship: return g->getPlayerShip();
+        case Mode::Ball: return g->getPlayerBall();
+        case Mode::Ufo: return g->getPlayerBird();
+        case Mode::Wave: return g->getPlayerDart();
+        case Mode::Robot: return g->getPlayerRobot();
+        case Mode::Spider: return g->getPlayerSpider();
+        case Mode::Swing: return g->getPlayerSwing();
+        case Mode::Jetpack: return g->getPlayerJetpack();
     }
     return 1;
 }
@@ -128,8 +128,9 @@ class EditorLayer : public CCLayerColor {
         for (int slot=0;slot<PER_PAGE;slot++) {
             int id=m_page*PER_PAGE+slot+1;
             if (id>max || !gm->isIconUnlocked(id,typeOf(m_mode))) continue;
-            auto sprite=SimplePlayer::create(id,typeOf(m_mode));
+            auto sprite=SimplePlayer::create(id);
             if (!sprite) continue;
+            sprite->updatePlayerFrame(id,typeOf(m_mode));
             sprite->setScale(.58f);
             auto item=CCMenuItemSpriteExtra::create(sprite,this,menu_selector(EditorLayer::onSelect));
             item->setTag(id);
