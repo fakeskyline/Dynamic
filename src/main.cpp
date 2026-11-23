@@ -11,6 +11,14 @@ void returnToPause() {
     if (!s_openedFromPause) return;
 
     s_openedFromPause = false;
+
+    // Remove only the extra pause lock acquired when entering the garage.
+    if (auto playLayer = PlayLayer::get()) {
+        if (playLayer->m_gameState.m_pauseCounter > 0) {
+            playLayer->m_gameState.m_pauseCounter--;
+        }
+    }
+
     CCDirector::get()->popScene();
 
     if (auto playLayer = PlayLayer::get()) {
@@ -53,6 +61,7 @@ class $modify(DynamicPauseLayer, PauseLayer) {
         // Keep the active level explicitly paused while the garage scene is open.
         if (auto playLayer = PlayLayer::get()) {
             playLayer->pauseGame(false);
+            playLayer->m_gameState.m_pauseCounter++;
         }
 
         s_openedFromPause = true;
