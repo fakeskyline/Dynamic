@@ -46,16 +46,9 @@ The workflow at `.github/workflows/build.yml` builds Android32, Android64 and Wi
 
 After all three builds succeed, the official `geode-sdk/build-geode-mod/combine@main` action merges the platform binaries into one universal `.geode` package.
 
-The workflow then validates the package before uploading it:
+The workflow validates the package before uploading it: it checks that all three binaries exist, Android32 is ELF32/ARM, Android64 is ELF64/AArch64, and Windows is PE32+/x86-64. If any check fails, the universal artifact is not uploaded.
 
-- Checks that all three platform binaries are present.
-- Checks Android32 is ELF32 / ARM.
-- Checks Android64 is ELF64 / AArch64.
-- Checks Windows is PE32+ / x86-64.
-
-If a binary is missing or has the wrong architecture, validation fails and the universal artifact is not published. The artifact is named `Dynamic-Icon-All-Platforms` and is retained for 30 days.
-
-Pushes to `main` start the workflow automatically. It can also be started manually from the repository's **Actions** tab.
+The artifact is named `Dynamic-Icon-All-Platforms` and is retained for 30 days. Pushes to `main` start the workflow automatically; it can also be started manually from the repository's **Actions** tab.
 
 ## Local build
 

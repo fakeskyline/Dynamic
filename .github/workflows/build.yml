@@ -26,9 +26,7 @@ jobs:
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Build Geode mod
         uses: geode-sdk/build-geode-mod@main
         with:
@@ -52,7 +50,6 @@ jobs:
           BUILD_OUTPUT: ${{ steps.combine.outputs.build-output }}
         run: |
           set -euo pipefail
-
           PACKAGE="$(find "$BUILD_OUTPUT" -type f -name '*.geode' -print -quit)"
           if [ -z "$PACKAGE" ]; then
             echo "::error::Combine action did not produce a .geode package"
@@ -69,8 +66,7 @@ jobs:
           for binary in "$ANDROID32" "$ANDROID64" "$WINDOWS"; do
             if [ ! -s "$binary" ]; then
               echo "::error::Missing platform binary: $(basename "$binary")"
-              echo "Package contents:"
-              find "$TEMP_DIR" -maxdepth 2 -type f -print
+              find "$TEMP_DIR" -maxdepth 3 -type f -print
               exit 1
             fi
           done
@@ -89,10 +85,7 @@ jobs:
           echo "$WINDOWS_INFO" | grep -Eiq "x86-64|x86_64"
 
           echo "All platform binaries are present and have the expected architectures."
-          echo "Android32: $(stat -c '%s bytes' "$ANDROID32")"
-          echo "Android64: $(stat -c '%s bytes' "$ANDROID64")"
-          echo "Windows x64: $(stat -c '%s bytes' "$WINDOWS")"
-          echo "Universal package: $(stat -c '%s bytes' "$PACKAGE")"
+          stat -c '%n: %s bytes' "$ANDROID32" "$ANDROID64" "$WINDOWS" "$PACKAGE"
 
       - name: Upload universal package
         uses: actions/upload-artifact@v4
