@@ -9,9 +9,22 @@ permissions:
   contents: read
 
 jobs:
-  android64:
-    name: Build Android64
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Android32
+            target: Android32
+            os: ubuntu-latest
+          - platform: Android64
+            target: Android64
+            os: ubuntu-latest
+          - platform: Windows
+            target: Win64
+            os: windows-latest
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,12 +34,12 @@ jobs:
         uses: geode-sdk/build-geode-mod@main
         with:
           sdk: given
-          target: Android64
+          target: ${{ matrix.target }}
           build-config: Release
 
-      - name: Upload .geode package
+      - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: Dynamic-Icon-Android64
+          name: Dynamic-Icon-${{ matrix.platform }}
           path: ${{ steps.build.outputs.build-output }}
           if-no-files-found: error

@@ -35,33 +35,39 @@ After returning from the garage, the mod reads the active game mode from the liv
 | --- | --- |
 | Geometry Dash | 2.2091 |
 | Geode SDK | v6.0.0-beta.2 |
-| Build target | Android64 (arm64-v8a) |
-
-The Geode SDK version is specified in `mod.json`.
+| Android | Android32 (armeabi-v7a), Android64 (arm64-v8a) |
+| Windows | Win64 |
 
 ## Build with GitHub Actions
 
-The repository includes a workflow at `.github/workflows/build.yml`.
+The workflow is located at `.github/workflows/build.yml`. It runs on pushes to `main` and can also be started manually from the repository's **Actions** tab.
 
-The workflow runs automatically when a commit is pushed to the `main` branch. It can also be started manually:
+Three builds run in parallel:
 
-1. Open the repository's **Actions** tab.
-2. Select **Build Dynamic Icon**.
-3. Press **Run workflow** and choose the `main` branch.
-4. Wait for the **Build Android64** job to finish.
-5. Open the workflow run and download the `Dynamic-Icon-Android64` artifact.
-6. Extract the downloaded ZIP archive to get the `.geode` package.
+| Job | Runner | Geode target | Artifact |
+| --- | --- | --- | --- |
+| Android32 | Ubuntu | `Android32` | `Dynamic-Icon-Android32` |
+| Android64 | Ubuntu | `Android64` | `Dynamic-Icon-Android64` |
+| Windows | Windows | `Win64` | `Dynamic-Icon-Windows` |
 
-The workflow runs on GitHub-hosted Ubuntu and uses `geode-sdk/build-geode-mod@main` to build the mod with the Geode SDK. The build target is `Android64` and the build configuration is `Release`. The resulting package is uploaded as the `Dynamic-Icon-Android64` artifact. If the build does not produce a package, the artifact upload step fails.
+To download a build, open the completed workflow run, find **Artifacts**, and download the package for your platform. Each artifact is a ZIP containing the corresponding `.geode` file.
+
+The workflow uses `geode-sdk/build-geode-mod@main`, the Geode SDK version specified in `mod.json`, and the `Release` build configuration. Each platform is built independently, so a failure on one platform does not cancel the other builds.
 
 ## Local build
 
-Install the Geode CLI, Android NDK and the matching Geode SDK. Then run:
+Install the Geode CLI and the matching SDK binaries, then run the command for your platform:
 
 ```sh
 geode sdk install v6.0.0-beta.2
+geode sdk install-binaries -p android32 --version v6.0.0-beta.2
+geode build -p android32
+
 geode sdk install-binaries -p android64 --version v6.0.0-beta.2
 geode build -p android64
+
+geode sdk install-binaries -p win --version v6.0.0-beta.2
+geode build -p win
 ```
 
 ## License
