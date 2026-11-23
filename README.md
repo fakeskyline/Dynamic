@@ -16,47 +16,45 @@ The mod uses the game's official garage interface. It does not add a separate ic
 
 ## Hooks
 
-The implementation uses Geode's `$modify` hooks on these game classes:
-
 | Class | Hooked methods | Purpose |
 | --- | --- | --- |
-| `PauseLayer` | `customSetup`, `onResume` | Adds the garage button to the pause menu and clears the freeze state when gameplay resumes. |
-| `GJGarageLayer` | `onBack`, `keyBackClicked` | Returns to the pause screen when the garage was opened from a paused level. |
-| `GJBaseGameLayer` | `update` | Stops gameplay updates while the official garage is open from a paused level. |
+| `PauseLayer` | `customSetup`, `onResume` | Adds the garage button and clears the freeze state when gameplay resumes. |
+| `GJGarageLayer` | `onBack`, `keyBackClicked` | Returns to the paused level after closing the garage. |
+| `GJBaseGameLayer` | `update` | Stops gameplay updates while the garage is open from a paused level. |
 | `GameManager` | `isIconUnlocked`, `isColorUnlocked` | Makes icon and color unlock checks return true. |
-| `GameStatsManager` | `isItemUnlocked` | Makes the Practice Music Sync item (GJItem 17) return unlocked; other items use the original method. |
+| `GameStatsManager` | `isItemUnlocked` | Unlocks Practice Music Sync (GJItem 17); other items use the original method. |
 | `PlayLayer` | `resetLevel`, `onQuit` | Clears the freeze state when the level is reset or exited. |
 
-After returning from the garage, the mod reads the active game mode from the live `PlayerObject`, then updates that player's icon frame, colors and Glow. This avoids using the garage's currently selected tab as the player's in-level game mode.
+When returning from the garage, the mod reads the active mode from the live `PlayerObject` and applies its icon frame, colors and Glow. The mode is not taken from the garage tab.
 
 ## Compatibility
 
-| Component | Version |
-| --- | --- |
-| Geometry Dash | 2.2091 |
-| Geode SDK | v6.0.0-beta.2 |
-| Android | Android32 (armeabi-v7a), Android64 (arm64-v8a) |
-| Windows | Win64 |
+| Platform | Architecture | Geode target |
+| --- | --- | --- |
+| Android32 | armeabi-v7a | `Android32` |
+| Android64 | arm64-v8a | `Android64` |
+| Windows | x86_64 | `Win64` |
+
+The project uses Geode APIs and Cocos2d interfaces shared by these targets. There are no Android-only or Windows-only calls in the gameplay code; the same source is compiled separately for each platform.
+
+- Geometry Dash: 2.2091
+- Geode SDK: v6.0.0-beta.2
 
 ## Build with GitHub Actions
 
-The workflow is located at `.github/workflows/build.yml`. It runs on pushes to `main` and can also be started manually from the repository's **Actions** tab.
+The workflow is in `.github/workflows/build.yml`. It runs on pushes to `main` and can also be started manually from the repository's **Actions** tab.
 
-Three builds run in parallel:
+Three platform builds run in parallel: Android32 and Android64 on Ubuntu, and Windows on a Windows runner. After all three succeed, a packaging job collects their `.geode` files into one artifact:
 
-| Job | Runner | Geode target | Artifact |
-| --- | --- | --- | --- |
-| Android32 | Ubuntu | `Android32` | `Dynamic-Icon-Android32` |
-| Android64 | Ubuntu | `Android64` | `Dynamic-Icon-Android64` |
-| Windows | Windows | `Win64` | `Dynamic-Icon-Windows` |
+`Dynamic-Icon-All-Platforms`
 
-To download a build, open the completed workflow run, find **Artifacts**, and download the package for your platform. Each artifact is a ZIP containing the corresponding `.geode` file.
+To get all builds, open a completed workflow run, go to **Artifacts**, and download that single ZIP. It contains the packages for Android32, Android64 and Windows. The temporary per-platform artifacts are retained for one day; the combined artifact is retained for 30 days.
 
-The workflow uses `geode-sdk/build-geode-mod@main`, the Geode SDK version specified in `mod.json`, and the `Release` build configuration. Each platform is built independently, so a failure on one platform does not cancel the other builds.
+The workflow uses `geode-sdk/build-geode-mod@main`, the SDK version from `mod.json`, and the `Release` configuration. If any platform build fails, the combined package job will not run.
 
 ## Local build
 
-Install the Geode CLI and the matching SDK binaries, then run the command for your platform:
+Install the Geode CLI and matching SDK binaries, then build the target you need:
 
 ```sh
 geode sdk install v6.0.0-beta.2

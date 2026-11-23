@@ -16,6 +16,8 @@ void applyPlayerAppearance(PlayerObject* player) {
     if (!player) return;
 
     auto gameManager = GameManager::sharedState();
+    if (!gameManager) return;
+
     IconType iconType = IconType::Cube;
 
     if (player->m_isShip) {
@@ -37,33 +39,15 @@ void applyPlayerAppearance(PlayerObject* player) {
     auto iconID = gameManager->activeIconForType(iconType);
 
     switch (iconType) {
-        case IconType::Cube:
-            player->updatePlayerFrame(iconID);
-            break;
-        case IconType::Ship:
-            player->updatePlayerShipFrame(iconID);
-            break;
-        case IconType::Ball:
-            player->updatePlayerRollFrame(iconID);
-            break;
-        case IconType::Ufo:
-            player->updatePlayerBirdFrame(iconID);
-            break;
-        case IconType::Wave:
-            player->updatePlayerDartFrame(iconID);
-            break;
-        case IconType::Robot:
-            player->updatePlayerRobotFrame(iconID);
-            break;
-        case IconType::Spider:
-            player->updatePlayerSpiderFrame(iconID);
-            break;
-        case IconType::Swing:
-            player->updatePlayerSwingFrame(iconID);
-            break;
-        default:
-            player->updatePlayerFrame(iconID);
-            break;
+        case IconType::Cube: player->updatePlayerFrame(iconID); break;
+        case IconType::Ship: player->updatePlayerShipFrame(iconID); break;
+        case IconType::Ball: player->updatePlayerRollFrame(iconID); break;
+        case IconType::Ufo: player->updatePlayerBirdFrame(iconID); break;
+        case IconType::Wave: player->updatePlayerDartFrame(iconID); break;
+        case IconType::Robot: player->updatePlayerRobotFrame(iconID); break;
+        case IconType::Spider: player->updatePlayerSpiderFrame(iconID); break;
+        case IconType::Swing: player->updatePlayerSwingFrame(iconID); break;
+        default: player->updatePlayerFrame(iconID); break;
     }
 
     player->setColor(gameManager->colorForIdx(gameManager->getPlayerColor()));
