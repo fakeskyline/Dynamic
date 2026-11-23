@@ -2,6 +2,7 @@
 #include <Geode/modify/PauseLayer.hpp>
 #include <Geode/modify/GJGarageLayer.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
+#include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/GameManager.hpp>
 #include <Geode/modify/GameStatsManager.hpp>
 
@@ -125,4 +126,4 @@ class $modify(DynamicPlayLayer, PlayLayer) {
         s_openedFromPause = false;
         PlayLayer::onQuit();
     }
-}
+};
